@@ -1,4 +1,4 @@
-# Spilhaul
+# Spilhaus
 
 ![Vessel presence shown on a world map in the Spilhaus projection](presence_map.png "Vessel Presence")
 
