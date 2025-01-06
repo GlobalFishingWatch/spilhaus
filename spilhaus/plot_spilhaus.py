@@ -46,7 +46,12 @@ def plot_spilhaus(
     cmap=mpcm.plasma,
     background_color="#000000",
     resolution=2000,
+    vmin=1,
+    vmax=10000,
+    dpi=300,
 ):
+    # This is not a great way to plot a raster since it falls apart at low resolution,
+    # but it's quick and fairly easy to set up.
 
     presence_df = make_spilhaus_xy_gridpoints(spilhaus_res=resolution)
     old_settings = np.seterr(all='ignore')
@@ -65,7 +70,7 @@ def plot_spilhaus(
 
     splilhaus_ocean = presence_df.copy()
     splilhaus_ocean["z"] = create_filled(
-        mask, interpolate_onto(valid_lon, valid_lat, ocean_raster == 0), fill=0.0
+        mask, interpolate_onto(valid_lon, valid_lat, ocean_raster > 0), fill=0.0
     )
 
     pretty_presence_df = prettify_spilhaus_df(presence_df)
@@ -74,36 +79,23 @@ def plot_spilhaus(
     if isinstance(background_color, str):
         background_color = hex_to_rgb(background_color)
 
-    vmin = 1
-    vmax = 10000
-
     z = np.minimum(pretty_presence_df["z"], 0.99 * vmax)
 
     norm = mpcolors.LogNorm(vmin=vmin, vmax=vmax, clip=True)
 
-    fig, ax = plt.subplots(1, 1, figsize=(16, 16), dpi=300)
+    fig, ax = plt.subplots(1, 1, figsize=(16, 16), dpi=dpi)
+
+    foreground_mask = (pretty_ocean_df['z'] > 0)
 
     plt.scatter(
-        x=pretty_presence_df["x"],
-        y=pretty_presence_df["y"],
-        c=z,
-        marker="s",
-        s=72.0 / fig.dpi,
+        x=pretty_presence_df["x"][foreground_mask],
+        y=pretty_presence_df["y"][foreground_mask],
+        c=z[foreground_mask],
+        edgecolors="none",
+        s=36.0 / dpi,
         cmap=cmap,
         norm=norm,
         zorder=1,
-    )
-    z = pretty_ocean_df["z"].values.copy()
-    z[np.isnan(z)] = 0
-    z = (np.clip(z, 0, 1))[:, None] * [tuple(background_color) + (1,)]
-
-    plt.scatter(
-        x=pretty_ocean_df["x"],
-        y=pretty_ocean_df["y"],
-        c=z,
-        marker="s",
-        s=72.0 / fig.dpi,
-        zorder=10,
     )
 
     ax.spines["top"].set_visible(False)

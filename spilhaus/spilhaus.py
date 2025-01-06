@@ -1,3 +1,5 @@
+# Copied from https://github.com/rtlemos/spilhaus/blob/main/spilhaus.py
+
 from typing import Tuple
 import numpy.typing as npt
 import numpy as np
